@@ -15,6 +15,45 @@ use std::path::Path;
 use syn::visit::Visit;
 use syn::{Expr, File};
 
+/// Collects identifier names that are passed as the 2nd argument to any
+/// `<SomeClient>::new(env, &addr)` or `<SomeClient>::new(env, addr.clone())`
+/// call — a strong signal that `addr` is an asset/contract reference rather
+/// than a user identity, and therefore should not be expected to `require_auth`.
+#[derive(Default)]
+struct ClientArgCollector {
+    contract_refs: Vec<String>,
+}
+
+impl<'ast> Visit<'ast> for ClientArgCollector {
+    fn visit_expr_call(&mut self, call: &'ast syn::ExprCall) {
+        if let Expr::Path(p) = &*call.func {
+            let is_new = p
+                .path
+                .segments
+                .last()
+                .map(|s| s.ident == "new")
+                .unwrap_or(false);
+            if is_new && call.args.len() >= 2 {
+                if let Some(name) = extract_ident(&call.args[1]) {
+                    self.contract_refs.push(name);
+                }
+            }
+        }
+        syn::visit::visit_expr_call(self, call);
+    }
+}
+
+/// Extract the top-level identifier from expressions such as `x`, `&x`,
+/// `x.clone()`, `&x.clone()`, `addr.clone()`.
+fn extract_ident(expr: &Expr) -> Option<String> {
+    match expr {
+        Expr::Path(p) => p.path.get_ident().map(|i| i.to_string()),
+        Expr::Reference(r) => extract_ident(&r.expr),
+        Expr::MethodCall(mc) if mc.method == "clone" => extract_ident(&mc.receiver),
+        _ => None,
+    }
+}
+
 pub struct Rule002;
 
 impl Rule for Rule002 {
@@ -58,11 +97,18 @@ impl Rule for Rule002 {
             finder.visit_block(&fun.block);
             let authed: Vec<String> = finder.authed;
 
-            // Any Address param that was never auth'd triggers a finding
-            // (reported once per function for the first such param).
+            // Collect parameters that are clearly asset/contract references
+            // (passed as the 2nd arg to `<Client>::new(env, &x)`).
+            let mut client_args = ClientArgCollector::default();
+            client_args.visit_block(&fun.block);
+
+            // Any Address param that was never auth'd AND not obviously a
+            // contract reference triggers a finding (reported once per
+            // function for the first such param).
             let missing: Vec<String> = addr_params
                 .iter()
                 .filter(|a| !authed.iter().any(|e| e == *a))
+                .filter(|a| !client_args.contract_refs.iter().any(|e| e == *a))
                 .cloned()
                 .collect();
 
