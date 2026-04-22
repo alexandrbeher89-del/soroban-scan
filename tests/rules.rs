@@ -53,6 +53,24 @@ fn ss012_fires_on_unwrap_in_contractimpl() {
 }
 
 #[test]
+fn ss013_fires_on_ledger_as_randomness() {
+    let f = scan_fixture("ss013_bad.rs");
+    assert!(has_id(&f, "SS013"), "expected SS013 in fixture, got {f:#?}");
+    let hits: Vec<_> = f.iter().filter(|x| x.id == "SS013").collect();
+    // Expect at least the timestamp-modulo, sequence-modulo, seed-from, and
+    // shuffle-with patterns to fire — 4 bad shapes in the fixture.
+    assert!(
+        hits.len() >= 4,
+        "expected >= 4 SS013 hits for 4 bad patterns, got {hits:#?}"
+    );
+    // And the benign `deadline_check` / `age_math` lines must not fire.
+    assert!(
+        hits.iter().all(|x| !x.snippet.contains("< deadline") && !x.snippet.contains("- start")),
+        "SS013 should not flag comparison / subtraction on timestamp"
+    );
+}
+
+#[test]
 fn sarif_output_has_valid_shape() {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
     let cfg = soroban_scan::ScanConfig {
@@ -68,7 +86,7 @@ fn sarif_output_has_valid_shape() {
     let run = &sarif["runs"][0];
     assert_eq!(run["tool"]["driver"]["name"], "soroban-scan");
     let rules = run["tool"]["driver"]["rules"].as_array().expect("rules array");
-    assert_eq!(rules.len(), 12, "all 12 rules must appear in SARIF metadata");
+    assert_eq!(rules.len(), 13, "all 13 rules must appear in SARIF metadata");
 
     let results = run["results"].as_array().expect("results array");
     assert!(!results.is_empty(), "fixtures should produce findings");
