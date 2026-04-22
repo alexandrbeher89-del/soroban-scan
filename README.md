@@ -63,7 +63,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: alexandrbeher89-del/soroban-scan@v0.2.0
+      - uses: alexandrbeher89-del/soroban-scan@v0.3.0
         with:
           path: ./contracts
           fail-on: high
