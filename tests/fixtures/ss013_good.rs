@@ -34,3 +34,11 @@ fn brand_check(env: &Env) -> u64 {
     // primitive. Must not be flagged.
     brand(env.ledger().timestamp())
 }
+
+#[allow(dead_code)]
+fn per_block_average(total: u64, env: &Env) -> u64 {
+    // OK: ledger value on the RHS of `/` — this is a per-block average, not
+    // an entropy primitive. Flagging it would misformat the note as
+    // `ts % N` when the actual shape is `N / ts`.
+    total / env.ledger().sequence() as u64
+}

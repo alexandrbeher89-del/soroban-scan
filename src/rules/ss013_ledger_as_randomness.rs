@@ -141,7 +141,12 @@ impl<'ast, 'a> Visit<'ast> for V<'a> {
                 BinOp::Rem(_) | BinOp::RemAssign(_) | BinOp::Div(_) | BinOp::DivAssign(_)
             );
             if is_div_or_mod {
-                if let Some(kind) = ledger_source(&bin.left).or_else(|| ledger_source(&bin.right)) {
+                // Only match ledger source on the LHS — RHS-on-RHS patterns
+                // like `total_supply / env.ledger().sequence()` compute a
+                // per-block average rather than an entropy primitive, and
+                // folding them in would both misformat the hint and inflate
+                // false positives. See module doc comment.
+                if let Some(kind) = ledger_source(&bin.left) {
                     let (line, column) = span_loc(bin.op.span());
                     if self.seen.insert((line, column)) {
                         let op = if matches!(bin.op, BinOp::Rem(_) | BinOp::RemAssign(_)) { "%" } else { "/" };
