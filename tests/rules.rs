@@ -101,6 +101,22 @@ fn ss015_does_not_fire_on_integer_math() {
 }
 
 #[test]
+fn ss016_fires_on_unauth_initializer() {
+    let f = scan_fixture("ss016_bad.rs");
+    let hits: Vec<_> = f.iter().filter(|x| x.id == "SS016").collect();
+    assert_eq!(hits.len(), 1, "expected exactly one SS016 hit, got {hits:#?}");
+}
+
+#[test]
+fn ss016_does_not_fire_on_constructor_or_authed_init() {
+    let f = scan_fixture("ss016_good.rs");
+    assert!(
+        !has_id(&f, "SS016"),
+        "SS016 must not fire on __constructor / authed init / zero-arg init, got {f:#?}"
+    );
+}
+
+#[test]
 fn sarif_output_has_valid_shape() {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
     let cfg = soroban_scan::ScanConfig {
@@ -116,7 +132,7 @@ fn sarif_output_has_valid_shape() {
     let run = &sarif["runs"][0];
     assert_eq!(run["tool"]["driver"]["name"], "soroban-scan");
     let rules = run["tool"]["driver"]["rules"].as_array().expect("rules array");
-    assert_eq!(rules.len(), 15, "all 15 rules must appear in SARIF metadata");
+    assert_eq!(rules.len(), 16, "all 16 rules must appear in SARIF metadata");
 
     let results = run["results"].as_array().expect("results array");
     assert!(!results.is_empty(), "fixtures should produce findings");
