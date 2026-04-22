@@ -1,0 +1,22 @@
+// Negative fixture for SS013 — legitimate uses of env.ledger().timestamp()
+// that must NOT fire (comparisons, subtractions, passed to a non-entropy
+// function). Parsed by syn; does not need to compile.
+
+#[allow(dead_code)]
+fn deadline_check(env: &Env, deadline: u64) -> bool {
+    // OK: comparison, not entropy.
+    env.ledger().timestamp() < deadline
+}
+
+#[allow(dead_code)]
+fn age_math(env: &Env, start: u64) -> u64 {
+    // OK: subtraction of two timestamps, not entropy.
+    env.ledger().timestamp() - start
+}
+
+#[allow(dead_code)]
+fn store_last_seen(env: &Env) -> u64 {
+    // OK: timestamp passed to a function that is NOT named like a random /
+    // seed / shuffle primitive.
+    record_observation(env.ledger().timestamp())
+}
