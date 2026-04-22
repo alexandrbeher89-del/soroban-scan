@@ -87,7 +87,8 @@ fn ss014_does_not_fire_on_extend_ttl_or_unrelated_bump() {
 #[test]
 fn ss015_fires_on_floating_point_types() {
     let f = scan_fixture("ss015_bad.rs");
-    assert!(has_id(&f, "SS015"), "expected SS015 in fixture, got {f:#?}");
+    let hits: Vec<_> = f.iter().filter(|x| x.id == "SS015").collect();
+    assert_eq!(hits.len(), 1, "expected exactly one SS015 hit, got {hits:#?}");
 }
 
 #[test]
