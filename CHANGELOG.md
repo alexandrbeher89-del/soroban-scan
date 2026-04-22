@@ -15,6 +15,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   can disagree on a rounding step and break consensus. Severity: **High**.
   Fix: use fixed-point integer math (`i128`/`u128` with an explicit
   decimal scale, or `soroban_sdk::U256`).
+- **SS016** — `unauthenticated_initializer`: flags `#[contractimpl]`
+  functions named `initialize` / `init` / `setup` that take at least one
+  privileged parameter, never call `.require_auth()` anywhere in the
+  body, and are not Soroban-21 `__constructor` functions. Two-step
+  `deploy` → `invoke initialize` flows leave a front-run window on every
+  fresh deployment (mainnet, testnet, fork, local) during which any
+  observer can take over the contract. Severity: **Medium**. Fix: on
+  SDK ≥ 21 rename to `pub fn __constructor(...)` so the call runs
+  atomically with deploy; otherwise add `admin.require_auth()` as the
+  first line (the existing `has_admin` idempotency guard keeps the
+  function one-shot). Derived from a hand audit of soroswap-core and
+  blend-contracts; see `docs/CASE-STUDY-SS016-INITIALIZER.md`.
 
 ## [0.3.0] — 2026-04-21
 

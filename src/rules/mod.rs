@@ -33,6 +33,7 @@ mod ss012_panic_unwrap_in_contract;
 mod ss013_ledger_as_randomness;
 mod ss014_deprecated_bump_api;
 mod ss015_floating_point_math;
+mod ss016_unauthenticated_initializer;
 
 pub fn all_rules() -> Vec<Box<dyn Rule>> {
     vec![
@@ -51,5 +52,6 @@ pub fn all_rules() -> Vec<Box<dyn Rule>> {
         Box::new(ss013_ledger_as_randomness::Rule013),
         Box::new(ss014_deprecated_bump_api::Rule014),
         Box::new(ss015_floating_point_math::Rule015),
+        Box::new(ss016_unauthenticated_initializer::Rule016),
     ]
 }
