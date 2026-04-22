@@ -20,3 +20,17 @@ fn store_last_seen(env: &Env) -> u64 {
     // seed / shuffle primitive.
     record_observation(env.ledger().timestamp())
 }
+
+#[allow(dead_code)]
+fn withdraw_with_deadline(pool: &Pool, from: &Address, amount: i128, env: &Env) {
+    // OK: `withdraw` contains the substring "draw" but is NOT a randomness
+    // primitive. Must not be flagged.
+    pool.withdraw(from, amount, env.ledger().timestamp() + 300);
+}
+
+#[allow(dead_code)]
+fn brand_check(env: &Env) -> u64 {
+    // OK: `brand` contains the substring "rand" but is NOT a randomness
+    // primitive. Must not be flagged.
+    brand(env.ledger().timestamp())
+}

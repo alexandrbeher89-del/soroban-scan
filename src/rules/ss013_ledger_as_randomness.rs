@@ -86,24 +86,50 @@ fn receiver_calls_ledger(expr: &Expr) -> bool {
     }
 }
 
+/// Treat the identifier as entropy-flavored only when one of the keywords
+/// appears as a **whole word-segment**, not a substring. This avoids flagging
+/// DeFi names like `withdraw` (contains "draw"), `brand` (contains "rand"),
+/// `operand`, `strand`, etc.
+///
+/// Segments are split on `_`; a keyword matches if it equals a segment
+/// exactly, OR (for the multi-letter keywords) is a prefix/suffix of the
+/// segment joined by `_` boundaries (so `rng_seed`, `seed_from`, `randomize`
+/// still match). `randomize` is handled by allowing prefix-match on
+/// `random`/`rand`.
+fn ident_looks_random(name: &str) -> bool {
+    let n = name.to_lowercase();
+    // Single-word cheap check first.
+    const EXACT: &[&str] = &[
+        "rand", "random", "randomize",
+        "seed",
+        "shuffle",
+        "draw",
+        "entropy",
+        "rng", "prng",
+    ];
+    for seg in n.split('_') {
+        if EXACT.contains(&seg) {
+            return true;
+        }
+        // Prefix forms like `random_*`, `seed_*`, `shuffle_*`.
+        if seg.starts_with("random") || seg.starts_with("shuffle") || seg.starts_with("entropy") {
+            return true;
+        }
+    }
+    // Whole-name prefixes not caught by segmenting: `seed_from`, `rand_from`
+    // are already caught above; `randomize` is caught by `starts_with`.
+    false
+}
+
 fn call_name_looks_random(mc: &ExprMethodCall) -> bool {
-    let n = mc.method.to_string().to_lowercase();
-    n.contains("rand")
-        || n.contains("seed")
-        || n.contains("shuffle")
-        || n.contains("draw")
-        || n.contains("entropy")
+    ident_looks_random(&mc.method.to_string())
 }
 
 fn path_last_looks_random(p: &syn::Path) -> bool {
-    p.segments.last().map(|s| {
-        let n = s.ident.to_string().to_lowercase();
-        n.contains("rand")
-            || n.contains("seed")
-            || n.contains("shuffle")
-            || n.contains("draw")
-            || n.contains("entropy")
-    }).unwrap_or(false)
+    p.segments
+        .last()
+        .map(|s| ident_looks_random(&s.ident.to_string()))
+        .unwrap_or(false)
 }
 
 impl<'ast, 'a> Visit<'ast> for V<'a> {
