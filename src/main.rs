@@ -37,6 +37,8 @@ struct Cli {
 enum Format {
     Human,
     Json,
+    /// SARIF 2.1.0 — consumed by GitHub Code Scanning and compatible dashboards.
+    Sarif,
 }
 
 #[derive(Clone, Debug, ValueEnum, PartialEq, Eq)]
@@ -65,6 +67,10 @@ fn main() -> Result<()> {
     match cli.format {
         Format::Human => print!("{}", soroban_scan::report::human(&scan)),
         Format::Json => println!("{}", serde_json::to_string_pretty(&scan.findings)?),
+        Format::Sarif => println!(
+            "{}",
+            serde_json::to_string_pretty(&soroban_scan::sarif::render(&scan))?
+        ),
     }
 
     // Exit code.

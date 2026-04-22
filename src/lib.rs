@@ -8,6 +8,7 @@ pub mod finding;
 pub mod report;
 pub mod rules;
 pub mod runner;
+pub mod sarif;
 pub mod walker;
 
 pub use finding::{Finding, Severity};

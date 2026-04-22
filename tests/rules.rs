@@ -51,3 +51,36 @@ fn ss012_fires_on_unwrap_in_contractimpl() {
     let f = scan_fixture("ss012_bad.rs");
     assert!(has_id(&f, "SS012"), "expected SS012 in fixture, got {f:#?}");
 }
+
+#[test]
+fn sarif_output_has_valid_shape() {
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
+    let cfg = soroban_scan::ScanConfig {
+        include_tests: true,
+        ..Default::default()
+    };
+    let scan = soroban_scan::scan_path(&dir, &cfg).expect("scan fixtures");
+    let sarif = soroban_scan::sarif::render(&scan);
+
+    assert_eq!(sarif["version"], "2.1.0");
+    assert!(sarif["$schema"].as_str().unwrap().starts_with("https://"));
+
+    let run = &sarif["runs"][0];
+    assert_eq!(run["tool"]["driver"]["name"], "soroban-scan");
+    let rules = run["tool"]["driver"]["rules"].as_array().expect("rules array");
+    assert_eq!(rules.len(), 12, "all 12 rules must appear in SARIF metadata");
+
+    let results = run["results"].as_array().expect("results array");
+    assert!(!results.is_empty(), "fixtures should produce findings");
+    for r in results {
+        let level = r["level"].as_str().unwrap();
+        assert!(
+            matches!(level, "error" | "warning" | "note" | "none"),
+            "invalid SARIF level: {level}"
+        );
+        assert!(r["ruleId"].is_string());
+        let loc = &r["locations"][0]["physicalLocation"];
+        assert!(loc["artifactLocation"]["uri"].is_string());
+        assert!(loc["region"]["startLine"].is_number());
+    }
+}

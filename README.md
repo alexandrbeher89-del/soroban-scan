@@ -34,6 +34,7 @@ cargo build --release
 ```bash
 soroban-scan path/to/contracts
 soroban-scan path/to/contracts --format json
+soroban-scan path/to/contracts --format sarif       # for GitHub Code Scanning
 soroban-scan path/to/contracts --skip SS010,SS005   # disable specific rules
 soroban-scan path/to/contracts --fail-on medium     # non-zero exit on M/H
 ```
@@ -45,6 +46,30 @@ Use it in CI to regression-guard new code:
   run: |
     cargo install --git https://github.com/alexandrbeher89-del/soroban-scan
     soroban-scan ./contracts --fail-on high
+```
+
+### GitHub Code Scanning integration (SARIF)
+
+soroban-scan emits SARIF 2.1.0, so findings surface directly in the
+repository's **Security → Code scanning** tab, with inline PR annotations:
+
+```yaml
+name: soroban-scan
+on: [push, pull_request]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write     # required to upload SARIF
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo install --git https://github.com/alexandrbeher89-del/soroban-scan
+      - run: soroban-scan . --format sarif > soroban-scan.sarif
+      - uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: soroban-scan.sarif
 ```
 
 ## Rules
