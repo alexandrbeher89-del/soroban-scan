@@ -69,6 +69,22 @@ fn ss013_does_not_fire_on_benign_ledger_use() {
 }
 
 #[test]
+fn ss014_fires_on_deprecated_bump() {
+    let f = scan_fixture("ss014_bad.rs");
+    let hits: Vec<_> = f.iter().filter(|x| x.id == "SS014").collect();
+    assert_eq!(hits.len(), 1, "expected exactly one SS014 hit, got {hits:#?}");
+}
+
+#[test]
+fn ss014_does_not_fire_on_extend_ttl_or_unrelated_bump() {
+    let f = scan_fixture("ss014_good.rs");
+    assert!(
+        !has_id(&f, "SS014"),
+        "SS014 must not fire on extend_ttl or non-storage bump, got {f:#?}"
+    );
+}
+
+#[test]
 fn sarif_output_has_valid_shape() {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
     let cfg = soroban_scan::ScanConfig {
@@ -84,7 +100,7 @@ fn sarif_output_has_valid_shape() {
     let run = &sarif["runs"][0];
     assert_eq!(run["tool"]["driver"]["name"], "soroban-scan");
     let rules = run["tool"]["driver"]["rules"].as_array().expect("rules array");
-    assert_eq!(rules.len(), 13, "all 13 rules must appear in SARIF metadata");
+    assert_eq!(rules.len(), 14, "all 14 rules must appear in SARIF metadata");
 
     let results = run["results"].as_array().expect("results array");
     assert!(!results.is_empty(), "fixtures should produce findings");
