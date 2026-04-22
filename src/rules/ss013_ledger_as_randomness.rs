@@ -134,7 +134,7 @@ fn path_last_looks_random(p: &syn::Path) -> bool {
 
 impl<'ast, 'a> Visit<'ast> for V<'a> {
     fn visit_expr(&mut self, e: &'ast Expr) {
-        // Case 1: modulo / division with ledger source on either side.
+        // Case 1: modulo / division with ledger source on the LHS.
         if let Expr::Binary(bin) = e {
             let is_div_or_mod = matches!(
                 bin.op,
