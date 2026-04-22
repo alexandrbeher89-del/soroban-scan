@@ -54,8 +54,10 @@ REPO_CLONE_MAX_BYTES = int(os.environ.get("REPO_CLONE_MAX_BYTES", str(50 * 1024 
 PAY_TO_ADDRESS = os.environ.get(
     "PAY_TO_ADDRESS", "0x04dd1AcaC0a5C498A8f26fcc745dc573B4EDcBFa"
 )
-X402_NETWORK = os.environ.get("X402_NETWORK", "base-sepolia")
-FACILITATOR_URL = os.environ.get("FACILITATOR_URL", "https://x402.org/facilitator")
+X402_NETWORK = os.environ.get("X402_NETWORK", "base")
+FACILITATOR_URL = os.environ.get(
+    "FACILITATOR_URL", "https://facilitator.openx402.ai"
+)
 X402_DISABLED = os.environ.get("X402_DISABLED", "0") == "1"  # for local smoke tests
 
 # USDC contract addresses per network (source: https://www.circle.com/en/usdc/developer)
