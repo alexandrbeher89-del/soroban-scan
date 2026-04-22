@@ -85,6 +85,21 @@ fn ss014_does_not_fire_on_extend_ttl_or_unrelated_bump() {
 }
 
 #[test]
+fn ss015_fires_on_floating_point_types() {
+    let f = scan_fixture("ss015_bad.rs");
+    assert!(has_id(&f, "SS015"), "expected SS015 in fixture, got {f:#?}");
+}
+
+#[test]
+fn ss015_does_not_fire_on_integer_math() {
+    let f = scan_fixture("ss015_good.rs");
+    assert!(
+        !has_id(&f, "SS015"),
+        "SS015 must not fire on integer fixed-point math, got {f:#?}"
+    );
+}
+
+#[test]
 fn sarif_output_has_valid_shape() {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
     let cfg = soroban_scan::ScanConfig {
@@ -100,7 +115,7 @@ fn sarif_output_has_valid_shape() {
     let run = &sarif["runs"][0];
     assert_eq!(run["tool"]["driver"]["name"], "soroban-scan");
     let rules = run["tool"]["driver"]["rules"].as_array().expect("rules array");
-    assert_eq!(rules.len(), 14, "all 14 rules must appear in SARIF metadata");
+    assert_eq!(rules.len(), 15, "all 15 rules must appear in SARIF metadata");
 
     let results = run["results"].as_array().expect("results array");
     assert!(!results.is_empty(), "fixtures should produce findings");

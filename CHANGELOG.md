@@ -5,6 +5,17 @@ All notable changes to soroban-scan are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **SS015** — `floating_point_math`: flags `f32` / `f64` / `f128` as a
+  type position (parameter, return, local binding, generic arg) and
+  in `as`-cast expressions. Floating-point arithmetic is not bit-for-bit
+  portable across Wasm runtimes and CPU feature sets, so two validators
+  can disagree on a rounding step and break consensus. Severity: **High**.
+  Fix: use fixed-point integer math (`i128`/`u128` with an explicit
+  decimal scale, or `soroban_sdk::U256`).
+
 ## [0.3.0] — 2026-04-21
 
 ### Added
