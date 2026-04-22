@@ -11,9 +11,10 @@ client side.
 https://soroban-scan-api-qhldjpbq.fly.dev/
 ```
 
-Status: **live on Base-Sepolia testnet** (public x402.org facilitator).
-Mainnet deployment requires a Coinbase CDP facilitator key and is gated by the
-merchant; see *Running on mainnet* below.
+Status: **live on Base mainnet** via the [OpenX402](https://facilitator.openx402.ai)
+facilitator — permissionless, no signup, no API keys. Paid endpoints quote real
+Base USDC (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`). Switch to Base-Sepolia
+or any other x402 facilitator via the environment variables below.
 
 ## Endpoints
 
@@ -45,8 +46,9 @@ async with x402HttpxClient(signer, "https://soroban-scan-api-qhldjpbq.fly.dev") 
 ```
 
 No header construction, no facilitator round-trip on the client side — the SDK
-does it all. You just need a signer funded with USDC (Base-Sepolia: request
-faucet USDC at https://faucet.circle.com/).
+does it all. You just need a signer funded with Base mainnet USDC. For
+development against a testnet deployment, pull Base-Sepolia faucet USDC from
+https://faucet.circle.com/ and redeploy with `X402_NETWORK=base-sepolia`.
 
 ## Request schemas
 
@@ -81,8 +83,8 @@ Response: `{ "git_url": "...", "ref": "...", "subdir": "...", "findings": {...} 
 | Var                      | Default                             | Purpose                                    |
 |--------------------------|-------------------------------------|--------------------------------------------|
 | `PAY_TO_ADDRESS`         | `0x04dd...cBFa`                     | Merchant wallet receiving USDC             |
-| `X402_NETWORK`           | `base-sepolia`                      | `base-sepolia` (testnet) or `base` (mainnet) |
-| `FACILITATOR_URL`        | `https://x402.org/facilitator`      | Verifier + settler                         |
+| `X402_NETWORK`           | `base`                              | `base` (mainnet) or `base-sepolia` (testnet) |
+| `FACILITATOR_URL`        | `https://facilitator.openx402.ai`   | Verifier + settler                         |
 | `SOROBAN_SCAN_BIN`       | `./soroban-scan`                    | Path to scanner binary                     |
 | `SCAN_TIMEOUT_SECS`      | `60`                                | Per-scan subprocess timeout                |
 | `REPO_SCAN_TIMEOUT_SECS` | `180`                               | Per-repo scan subprocess timeout           |
@@ -90,18 +92,21 @@ Response: `{ "git_url": "...", "ref": "...", "subdir": "...", "findings": {...} 
 | `REPO_CLONE_MAX_BYTES`   | `52428800`                          | Upper bound on repo clone size             |
 | `X402_DISABLED`          | `0`                                 | Set to `1` for free local dev              |
 
-## Running on mainnet
+## Switching facilitators / networks
 
-Base mainnet (real USDC) needs a facilitator that covers mainnet settlement.
-The public `https://x402.org/facilitator` is testnet-only. Options:
+The default deployment uses [OpenX402](https://facilitator.openx402.ai) on Base
+mainnet. To run elsewhere, override the env vars:
 
-1. **Coinbase CDP facilitator** — free tier 1000 tx/month, requires a CDP
-   account (5-min signup, no KYC for testnet reads). Set
+1. **Base-Sepolia testnet** — `X402_NETWORK=base-sepolia`,
+   `FACILITATOR_URL=https://x402.org/facilitator` (Coinbase's public testnet
+   facilitator). Request faucet USDC at https://faucet.circle.com/.
+2. **Coinbase CDP facilitator on mainnet** — free tier 1000 tx/month,
+   requires a CDP account (5-min signup). Set
    `FACILITATOR_URL=https://api.cdp.coinbase.com/platform/v2/x402` and provide
    the CDP API key via whatever auth pattern your deployment supports.
-2. **Alternative permissionless facilitators** — e.g. PayAI
+3. **Alternative permissionless facilitators** — e.g. PayAI
    (`https://facilitator.payai.network`). Coverage and fee structure vary.
-3. **Self-settlement** — fund the merchant wallet with ~$1 of ETH on Base and
+4. **Self-settlement** — fund the merchant wallet with ~$1 of ETH on Base and
    have the server call USDC's `transferWithAuthorization` directly. Removes
    the facilitator dependency but adds a gas-funded hot wallet.
 
