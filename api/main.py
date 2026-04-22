@@ -225,6 +225,12 @@ async def x402_middleware(request: Request, call_next):
 
     response = await call_next(request)
 
+    # Only settle when the handler delivered the paid service (2xx). If the
+    # handler returned an error (413 payload too large, 504 scanner timeout,
+    # 500 scanner crash, etc.), the client should not be charged on-chain.
+    if response.status_code >= 400:
+        return response
+
     try:
         settle = await _facilitator_post(
             "/settle",
@@ -234,8 +240,9 @@ async def x402_middleware(request: Request, call_next):
             json.dumps(settle).encode("utf-8")
         ).decode("ascii")
     except HTTPException as e:
-        # Handler already ran; don't hide successful response on settle failure,
-        # just surface a warning header the client can inspect.
+        # Handler already ran and succeeded; don't hide the response if the
+        # settle round-trip failed, just surface a warning header the client
+        # can inspect.
         response.headers["X-PAYMENT-SETTLE-ERROR"] = str(e.detail)[:200]
 
     return response
@@ -389,7 +396,7 @@ def scan_repo(req: RepoScanRequest = Body(...)) -> dict[str, Any]:
         scan_path = repo
         if req.subdir:
             candidate = (repo / req.subdir).resolve()
-            if not str(candidate).startswith(str(repo.resolve())):
+            if not candidate.is_relative_to(repo.resolve()):
                 raise HTTPException(status_code=400, detail="subdir escapes repository root")
             if not candidate.exists():
                 raise HTTPException(status_code=404, detail=f"subdir not found: {req.subdir}")
