@@ -48,10 +48,9 @@ Use it in CI to regression-guard new code:
     soroban-scan ./contracts --fail-on high
 ```
 
-### GitHub Code Scanning integration (SARIF)
+### GitHub Action
 
-soroban-scan emits SARIF 2.1.0, so findings surface directly in the
-repository's **Security → Code scanning** tab, with inline PR annotations:
+Drop-in composite action that installs and runs soroban-scan on every push:
 
 ```yaml
 name: soroban-scan
@@ -60,17 +59,33 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     permissions:
-      security-events: write     # required to upload SARIF
+      security-events: write     # only needed if upload-sarif: true
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - run: cargo install --git https://github.com/alexandrbeher89-del/soroban-scan
-      - run: soroban-scan . --format sarif > soroban-scan.sarif
+      - uses: alexandrbeher89-del/soroban-scan@v0.2.0
+        with:
+          path: ./contracts
+          fail-on: high
+          upload-sarif: 'true'
       - uses: github/codeql-action/upload-sarif@v3
+        if: always()
         with:
           sarif_file: soroban-scan.sarif
 ```
+
+Findings then surface in the repository's **Security → Code scanning** tab,
+with inline PR annotations.
+
+#### Action inputs
+
+| Input           | Default | Description                                                                                          |
+| --------------- | ------- | ---------------------------------------------------------------------------------------------------- |
+| `path`          | `.`     | Directory or file to scan.                                                                           |
+| `fail-on`       | `never` | Exit non-zero if any finding meets this severity: `never \| high \| medium \| low \| any`.           |
+| `skip`          | `""`    | Comma-separated rule IDs to disable (e.g. `SS006,SS010`).                                            |
+| `include-tests` | `false` | Scan `tests/` and `#[cfg(test)]` modules (off by default to reduce noise).                           |
+| `upload-sarif`  | `false` | Also emit `soroban-scan.sarif` for `github/codeql-action/upload-sarif@v3`.                           |
 
 ## Rules
 

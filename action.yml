@@ -1,0 +1,79 @@
+name: "soroban-scan"
+description: "Static analyzer for Soroban (Stellar) smart contracts written in Rust."
+author: "soroban-scan contributors"
+branding:
+  icon: "shield"
+  color: "blue"
+
+inputs:
+  path:
+    description: "Directory or file to scan (relative to repo root)."
+    required: false
+    default: "."
+  fail-on:
+    description: "Severity threshold for non-zero exit: never | high | medium | low | any."
+    required: false
+    default: "never"
+  skip:
+    description: "Comma-separated list of rule IDs to disable (e.g. SS006,SS010)."
+    required: false
+    default: ""
+  include-tests:
+    description: "If 'true', also scan files under tests/ and #[cfg(test)] modules."
+    required: false
+    default: "false"
+  upload-sarif:
+    description: "If 'true', emit SARIF to soroban-scan.sarif (upload separately with github/codeql-action/upload-sarif)."
+    required: false
+    default: "false"
+
+outputs:
+  sarif-file:
+    description: "Path to the SARIF report, if --upload-sarif was requested."
+    value: ${{ steps.scan.outputs.sarif-file }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Cache cargo install
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/soroban-scan
+          ~/.cargo/registry
+          ~/.cargo/git
+        key: soroban-scan-${{ runner.os }}-${{ github.action_ref || 'main' }}
+
+    - name: Install soroban-scan
+      shell: bash
+      run: |
+        if ! command -v soroban-scan >/dev/null 2>&1; then
+          REF="${{ github.action_ref || 'main' }}"
+          cargo install --git https://github.com/alexandrbeher89-del/soroban-scan --tag "$REF" || \
+          cargo install --git https://github.com/alexandrbeher89-del/soroban-scan
+        fi
+        soroban-scan --version
+
+    - name: Run soroban-scan
+      id: scan
+      shell: bash
+      run: |
+        set -euo pipefail
+        args=( "${{ inputs.path }}" --fail-on "${{ inputs.fail-on }}" )
+        if [[ -n "${{ inputs.skip }}" ]]; then
+          args+=( --skip "${{ inputs.skip }}" )
+        fi
+        if [[ "${{ inputs.include-tests }}" == "true" ]]; then
+          args+=( --include-tests )
+        fi
+        if [[ "${{ inputs.upload-sarif }}" == "true" ]]; then
+          soroban-scan "${args[@]}" --format sarif > soroban-scan.sarif
+          echo "sarif-file=soroban-scan.sarif" >> "$GITHUB_OUTPUT"
+          # Print a short human summary too, for the log.
+          soroban-scan "${args[@]}" || true
+        else
+          soroban-scan "${args[@]}"
+        fi
