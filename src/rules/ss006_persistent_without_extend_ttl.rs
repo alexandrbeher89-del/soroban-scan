@@ -1,11 +1,22 @@
 //! SS006 — writes to `env.storage().persistent()` that never pair with a
-//! matching `extend_ttl(...)` in the same function. Persistent entries have
-//! a bounded TTL; if writers don't bump it, entries silently archive and the
-//! protocol starts returning defaults from reads (see SS001).
+//! matching `extend_ttl(...)` in the same function.
 //!
-//! Heuristic: per function, count `persistent().set(...)` and
-//! `persistent().extend_ttl(...)` (or `.bump(...)`) calls. If writes happen
-//! but no TTL maintenance, emit a Low/Medium finding.
+//! ### Post CAP-0066 scope (Protocol 23)
+//!
+//! This is **not** a state-integrity issue. CAP-0066 auto-restores archived
+//! persistent entries on `InvokeHostFunctionOp`, so contract code will never
+//! read an archived entry as a default value. Missing `extend_ttl` only
+//! translates into:
+//!
+//! 1. The **user** paying a restoration fee on the next interaction that
+//!    touches the entry (can also cause tx fee-budget failures).
+//! 2. Worst case: the entry is evicted and a later user has to pay a larger
+//!    restoration, but the written value is preserved.
+//!
+//! Keep this rule as an **Info**-level UX/cost hint, not a security finding.
+//!
+//! Heuristic: per function, look for `persistent().set(...)` with no
+//! `extend_ttl(...)`/`.bump(...)` in the same function body.
 
 use super::Rule;
 use crate::finding::{Finding, Severity};
@@ -20,7 +31,7 @@ impl Rule for Rule006 {
     fn id(&self) -> &'static str { "SS006" }
     fn name(&self) -> &'static str { "persistent_write_without_extend_ttl" }
     fn description(&self) -> &'static str {
-        "function writes to persistent storage but never extends the entry's TTL; entries may archive and be read back as defaults"
+        "persistent().set(...) without a matching extend_ttl(...); eviction is harmless under CAP-0066 but imposes a restoration fee on the next caller"
     }
 
     fn run(&self, path: &Path, file: &File, _src: &str, out: &mut Vec<Finding>) {
@@ -45,17 +56,19 @@ impl<'a> V<'a> {
             self.out.push(Finding {
                 id: "SS006",
                 name: "persistent_write_without_extend_ttl",
-                description: "persistent().set(...) without a matching extend_ttl/bump",
-                severity: Severity::Low,
+                description: "persistent().set(...) without a matching extend_ttl/bump (restoration-fee hint)",
+                severity: Severity::Info,
                 file: self.path.to_path_buf(),
                 line,
                 column,
                 snippet,
                 note: Some(
-                    "Call `env.storage().persistent().extend_ttl(&key, MIN, EXTEND)` after \
-                     each set, or centralize TTL maintenance. Skipping it means the entry \
-                     will eventually archive and downstream reads may collapse to defaults \
-                     (see SS001)."
+                    "Under CAP-0066 (Protocol 23), evicted persistent entries are automatically \
+                     restored when next touched, so the stored value is preserved. The only \
+                     downside of a missing extend_ttl is that the next caller pays a restoration \
+                     fee (and may hit the tx fee budget). If this is a hot-path entry, add \
+                     `env.storage().persistent().extend_ttl(&key, MIN, EXTEND)` to amortize the \
+                     rent cost onto the writer."
                         .into(),
                 ),
             });

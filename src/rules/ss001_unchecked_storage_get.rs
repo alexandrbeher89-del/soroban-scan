@@ -1,16 +1,31 @@
-//! SS001 — `storage().persistent().get(...).unwrap_or(...)` collapses
-//! archived/expired entries into a valid zero/default, which is an
-//! authorization/consistency bug observed in real Soroban audits.
+//! SS001 — `storage().persistent().get(...).unwrap_or(...)` collapses a
+//! missing (never-initialized) entry into a caller-chosen default, making
+//! "never written" indistinguishable from a legitimate written value.
 //!
-//! Example bad:
-//! ```ignore
-//! env.storage().persistent().get(&key).unwrap_or(Vec::new(env))
-//! ```
+//! ### What this rule is NOT about (post CAP-0066 / Protocol 23)
 //!
-//! Preferred:
+//! Before reading Protocol 23, a common mis-reading of this pattern was:
+//! "an attacker could let the entry's TTL expire and then replay against
+//! the default value". That is **wrong** on Soroban mainnet. CAP-0066
+//! auto-restores archived persistent entries (or the host refuses to run
+//! the invocation), so contract code **cannot** observe `unwrap_or`'s
+//! default for a key that was previously written. See
+//! <https://github.com/stellar/stellar-protocol/blob/master/core/cap-0066.md>.
+//!
+//! ### What this rule IS about
+//!
+//! Initialization / presence checks where the author really does mean
+//! "treat missing as default". Two legitimate concerns remain:
+//!
+//! 1. Bugs in initialization flows (`unwrap_or(false)` on an
+//!    `Initialized` flag lets anyone re-initialize).
+//! 2. Code-quality smell: a silent default hides the "never set" case from
+//!    readers. Prefer `.ok_or(Error::NotInitialized)?` or `.expect(...)`.
+//!
+//! Example (legitimate concern):
 //! ```ignore
-//! env.storage().persistent().get(&key).expect("entry must exist")
-//! // or: .ok_or(Error::NotInitialized)?
+//! let initialized: bool = env.storage().instance().get(&KEY).unwrap_or(false);
+//! if !initialized { /* attacker can re-initialize if admin forgot setter */ }
 //! ```
 use super::helpers::{chain_contains, method_chain};
 use super::Rule;
@@ -25,7 +40,7 @@ impl Rule for Rule001 {
     fn id(&self) -> &'static str { "SS001" }
     fn name(&self) -> &'static str { "unchecked_storage_get_with_default" }
     fn description(&self) -> &'static str {
-        "persistent().get().unwrap_or(<default>) silently treats archived or expired entries as valid empty state"
+        "persistent/instance get().unwrap_or(<default>) conflates never-initialized entries with a legitimate default value"
     }
 
     fn run(&self, path: &Path, file: &File, _src: &str, out: &mut Vec<Finding>) {
@@ -57,17 +72,18 @@ impl<'ast, 'a> Visit<'ast> for V<'a> {
                     self.out.push(Finding {
                         id: "SS001",
                         name: "unchecked_storage_get_with_default",
-                        description: "persistent().get().unwrap_or(...) collapses expired entries into default state",
-                        severity: Severity::High,
+                        description: "persistent/instance get().unwrap_or(...) conflates never-initialized with a legitimate default",
+                        severity: Severity::Low,
                         file: self.path.to_path_buf(),
                         line,
                         column,
                         snippet,
                         note: Some(
-                            "Use .expect()/.ok_or(...)? or explicitly handle the None case; \
-                             otherwise a missing (e.g. archived-then-restored-as-default, or \
-                             never-initialized) entry is indistinguishable from a legitimate \
-                             empty value."
+                            "Post CAP-0066 (Protocol 23) archived entries are auto-restored, so \
+                             this is NOT a replay/archival vector. The real concern is \
+                             initialization checks: `.unwrap_or(false)` on an `Initialized` flag \
+                             lets anyone re-initialize. Prefer `.ok_or(Error::NotInitialized)?` \
+                             or `.expect(...)` so \"never written\" is explicit in the control flow."
                                 .into(),
                         ),
                     });

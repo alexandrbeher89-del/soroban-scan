@@ -1,8 +1,18 @@
 # Case studies — soroban-scan on public Soroban protocols
 
-This page reports what `soroban-scan` v0.1 finds when pointed at several
+This page reports what `soroban-scan` v0.2.1 finds when pointed at several
 well-known open-source Soroban codebases. It is a **triage exercise**, not an
 audit: findings are candidates for review, not proven vulnerabilities.
+
+> **v0.2.1 severity re-grading (CAP-0066):** SS001 was demoted High → Low and
+> SS006 was demoted Low → Info after re-reading [CAP-0066]. Archived
+> persistent entries are auto-restored by the host, so neither rule
+> corresponds to a state-integrity attack. SS001 now fires on the real
+> concern (initialization-flag confusion) and SS006 is a gas/UX hint. The
+> raw finding counts below are unchanged; the severity column in JSON /
+> SARIF output is new.
+>
+> [CAP-0066]: https://github.com/stellar/stellar-protocol/blob/master/core/cap-0066.md
 
 Every number here is reproducible. Commands are listed per protocol. If you
 want to reproduce, clone the protocol at the same commit and run the command
@@ -19,9 +29,9 @@ that keep tests co-located with implementation (Blend, DeFindex).
 | ------------------------- | -------- | ----- | --------- | ------------ |
 | Code4rena K2 (April 2026) |  ~37k    |  121  |  2.1 s    |  369         |
 | Blend protocol            |  29.7k   |   80  |  0.13 s   |   49         |
-| Soroswap core             |  13.9k   |   74  |  0.07 s   |   40         |
+| Soroswap core             |  13.9k   |   74  |  0.07 s   |   39         |
 | DeFindex                  |  32.0k   |  138  |  0.16 s   |   99         |
-| Phoenix protocol          |  33.0k   |   56  |  0.06 s   |  132         |
+| Phoenix protocol          |  33.0k   |   56  |  0.06 s   |  129         |
 
 soroban-scan is **fast** — <200 ms on 30k LoC — which is what makes it
 practical to keep in CI.
@@ -33,7 +43,7 @@ practical to keep in CI.
 - Repo: <https://github.com/blend-capital/blend-contracts>
 - Command: `soroban-scan /path/to/blend-contracts`
 
-Totals: 49 findings (26 high, 23 low).
+Totals: 49 findings (25 high, 20 low, 4 info).
 
 | Rule  | Count | Triage notes                                                                                                     |
 | ----- | ----- | ---------------------------------------------------------------------------------------------------------------- |
@@ -50,7 +60,7 @@ plus a small handful of SS005/SS006 items worth reviewing.
 - Repo: <https://github.com/soroswap/core>
 - Command: `soroban-scan /path/to/soroswap/core`
 
-Totals: 40 findings (29 high, 11 low).
+Totals: 39 findings (26 high, 13 low, 0 info).
 
 | Rule  | Count | Triage notes                                                                                        |
 | ----- | ----- | --------------------------------------------------------------------------------------------------- |
@@ -64,7 +74,7 @@ Totals: 40 findings (29 high, 11 low).
 - Repo: <https://github.com/paltalabs/defindex>
 - Command: `soroban-scan /path/to/defindex`
 
-Totals: 99 findings (46 high, 53 low).
+Totals: 99 findings (39 high, 48 low, 12 info).
 
 | Rule  | Count | Triage notes                                                                                  |
 | ----- | ----- | --------------------------------------------------------------------------------------------- |
@@ -79,7 +89,7 @@ Totals: 99 findings (46 high, 53 low).
 - Repo: <https://github.com/Phoenix-Protocol-Group/phoenix-contracts>
 - Command: `soroban-scan /path/to/phoenix-contracts`
 
-Totals: 132 findings (62 high, 9 medium, 61 low).
+Totals: 129 findings (32 high, 9 medium, 76 low, 12 info).
 
 | Rule  | Count | Triage notes                                                                                       |
 | ----- | ----- | -------------------------------------------------------------------------------------------------- |
