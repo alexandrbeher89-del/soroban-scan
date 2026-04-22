@@ -107,6 +107,9 @@ HIGH [SS002] debt-token/src/contract.rs:46:12
 (Most findings require triage. That's by design: soroban-scan is a first
 pass, not a verdict.)
 
+See [`docs/CASE-STUDIES.md`](docs/CASE-STUDIES.md) for reproducible scan
+reports on Blend, Soroswap, DeFindex, and Phoenix.
+
 ## Contributing
 
 PRs welcome. To add a new rule:
