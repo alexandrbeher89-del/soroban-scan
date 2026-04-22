@@ -53,6 +53,22 @@ fn ss012_fires_on_unwrap_in_contractimpl() {
 }
 
 #[test]
+fn ss013_fires_on_ledger_as_randomness() {
+    let f = scan_fixture("ss013_bad.rs");
+    let hits: Vec<_> = f.iter().filter(|x| x.id == "SS013").collect();
+    assert_eq!(hits.len(), 1, "expected exactly one SS013 hit, got {hits:#?}");
+}
+
+#[test]
+fn ss013_does_not_fire_on_benign_ledger_use() {
+    let f = scan_fixture("ss013_good.rs");
+    assert!(
+        !has_id(&f, "SS013"),
+        "SS013 must not fire on comparison / subtraction / non-entropy calls, got {f:#?}"
+    );
+}
+
+#[test]
 fn sarif_output_has_valid_shape() {
     let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures");
     let cfg = soroban_scan::ScanConfig {
@@ -68,7 +84,7 @@ fn sarif_output_has_valid_shape() {
     let run = &sarif["runs"][0];
     assert_eq!(run["tool"]["driver"]["name"], "soroban-scan");
     let rules = run["tool"]["driver"]["rules"].as_array().expect("rules array");
-    assert_eq!(rules.len(), 12, "all 12 rules must appear in SARIF metadata");
+    assert_eq!(rules.len(), 13, "all 13 rules must appear in SARIF metadata");
 
     let results = run["results"].as_array().expect("results array");
     assert!(!results.is_empty(), "fixtures should produce findings");
