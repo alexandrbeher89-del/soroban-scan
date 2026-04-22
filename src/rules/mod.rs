@@ -31,6 +31,7 @@ mod ss010_missing_event_on_state_change;
 mod ss011_require_auth_on_arg_address;
 mod ss012_panic_unwrap_in_contract;
 mod ss013_ledger_as_randomness;
+mod ss014_deprecated_bump_api;
 
 pub fn all_rules() -> Vec<Box<dyn Rule>> {
     vec![
@@ -47,5 +48,6 @@ pub fn all_rules() -> Vec<Box<dyn Rule>> {
         Box::new(ss011_require_auth_on_arg_address::Rule011),
         Box::new(ss012_panic_unwrap_in_contract::Rule012),
         Box::new(ss013_ledger_as_randomness::Rule013),
+        Box::new(ss014_deprecated_bump_api::Rule014),
     ]
 }

@@ -104,6 +104,7 @@ with inline PR annotations.
 | SS011  | Medium   | `partial_auth_coverage`                 | Function auths some but not all `Address` parameters.                                         |
 | SS012  | Low      | `panic_in_contract_function`            | `unwrap()` / `expect()` / `panic!()` inside `#[contractimpl]` — prefer typed `Error`.         |
 | SS013  | Medium   | `ledger_as_randomness`                  | `env.ledger().timestamp()` / `.sequence()` used as entropy (modulo, seed, shuffle). Ledger state is deterministic and public before the contract runs; sequencers and callers can grind it. |
+| SS014  | Info     | `deprecated_bump_api`                   | `.bump(...)` on a storage handle — Soroban SDK renamed this to `.extend_ttl(...)` around v20.  |
 
 > **SS001 & SS006 note**: older drafts of this tool treated these as High
 > severity on the theory that archived persistent entries are silently read
