@@ -9,8 +9,10 @@ Where `cargo clippy` is stylistic and `cargo audit` is supply-chain,
 up in signed audit reports as *Medium* or *High* severity findings, so you
 can reproduce a solid first pass before paying for a human audit.
 
-> Status: **v0.1 — early, useful, best-effort**. Heuristic-based: expect
-> false positives; triage reported findings by hand.
+> Status: **v0.4.0 — 16 rules, heuristic-based, best-effort**. Each rule is
+> grounded in a *published* Soroban audit report (Halborn / WatchPug / Zellic
+> V12 / Certora / OtterSec). Expect false positives; triage reported findings
+> by hand.
 
 ---
 
@@ -63,7 +65,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - uses: alexandrbeher89-del/soroban-scan@v0.3.0
+      - uses: alexandrbeher89-del/soroban-scan@v0.4.0
         with:
           path: ./contracts
           fail-on: high
@@ -86,6 +88,43 @@ with inline PR annotations.
 | `skip`          | `""`    | Comma-separated rule IDs to disable (e.g. `SS006,SS010`).                                            |
 | `include-tests` | `false` | Scan `tests/` and `#[cfg(test)]` modules (off by default to reduce noise).                           |
 | `upload-sarif`  | `false` | Also emit `soroban-scan.sarif` for `github/codeql-action/upload-sarif@v3`.                           |
+
+## Pay-per-call HTTP API
+
+If you'd rather not install the CLI, `soroban-scan` is also available as a
+pay-per-call HTTP API with an [x402](https://x402.org) paywall — you send
+USDC on Base per request, no accounts, no API keys, no signup.
+
+Live endpoint: <https://soroban-scan-api-qhldjpbq.fly.dev/>
+
+| Method | Path         | Paid  | Price  |
+|--------|--------------|-------|--------|
+| GET    | `/`          | no    | —      |
+| GET    | `/rules`     | no    | —      |
+| GET    | `/healthz`   | no    | —      |
+| POST   | `/scan`      | yes   | $0.01  |
+| POST   | `/scan/repo` | yes   | $0.05  |
+
+Minimal Python client:
+
+```bash
+pip install "x402[httpx,evm]"
+```
+
+```python
+import httpx
+from x402.clients.httpx import x402HttpxClient
+from eth_account import Account
+
+signer = Account.from_key("0x...")          # any EVM signer with Base USDC
+async with x402HttpxClient(signer, "https://soroban-scan-api-qhldjpbq.fly.dev") as c:
+    r = await c.post("/scan", json={"source": open("contract.rs").read()})
+    print(r.json())
+```
+
+See [`api/README.md`](api/README.md) for the full API spec, facilitator
+options (OpenX402 mainnet is the default; Base-Sepolia testnet and Coinbase
+CDP are supported) and local development notes.
 
 ## Rules
 
@@ -180,10 +219,14 @@ PRs welcome. To add a new rule:
 
 If `soroban-scan` saved you audit time or caught a real bug, consider:
 
+- **Pay-per-call scans** via the [x402 API](#pay-per-call-http-api) above — every
+  paid request settles USDC directly to the project wallet on Base.
 - **Tip jar (EVM — ETH / Arbitrum / Base / Polygon / BSC):**
   `0x04dd1AcaC0a5C498A8f26fcc745dc573B4EDcBFa`
-- Stellar Community Fund (SCF) builder grants are being pursued —
-  endorsements welcome.
+- **SCF Interest Form** for a Stellar Community Fund Build Award was submitted
+  into Round #43 on 2026-04-21; endorsements from verified SCF members are
+  welcome. Full pre-written Build Award submission lives at
+  [`docs/SCF-BUILD-AWARD-SUBMISSION.md`](docs/SCF-BUILD-AWARD-SUBMISSION.md).
 - Open an issue with a false positive / negative you'd like handled.
 
 ## License

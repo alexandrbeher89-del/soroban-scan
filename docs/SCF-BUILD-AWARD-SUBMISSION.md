@@ -51,10 +51,11 @@ auditors start at line-item review instead of at pattern-matching.
 - Output formats: human, JSON, SARIF 2.1.0.
 - Companion composite GitHub Action at repo root (`action.yml`) — 3-line drop-in
   for any Soroban repo's CI pipeline.
-- Pay-per-call HTTP API (`api/`) wrapping the scanner with an x402 paywall —
-  clients pay USDC on Base per request, payments settle directly to the
-  project wallet. Currently deployed on a Base-Sepolia testnet facilitator
-  for shape validation; mainnet flip is a one-env-var change.
+- Pay-per-call HTTP API (`api/`) wrapping the scanner with an x402 paywall,
+  **live on Base mainnet** at <https://soroban-scan-api-qhldjpbq.fly.dev/>.
+  Clients pay real USDC on Base per request ($0.01/scan, $0.05/repo-scan);
+  payments settle directly to the project wallet via the permissionless
+  OpenX402 facilitator. No accounts, no API keys, no signup.
 - MIT licensed. CI green. 6 releases in CHANGELOG (v0.1.x → v0.4.0). 4
   reproducible case-study scans on Blend / Soroswap / DeFindex / Phoenix.
 - CAP-0066 severity re-grading writeup (public self-correction after SDF's
