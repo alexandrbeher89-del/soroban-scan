@@ -10,7 +10,11 @@ audit: findings are candidates for review, not proven vulnerabilities.
 > corresponds to a state-integrity attack. SS001 now fires on the real
 > concern (initialization-flag confusion) and SS006 is a gas/UX hint. The
 > raw finding counts below are unchanged; the severity column in JSON /
-> SARIF output is new.
+> SARIF output is new. All totals below are fresh scans with v0.2.1, so
+> they also pick up any upstream noise reductions shipped since the last
+> case-study refresh (e.g. v0.1.2's SS002 taint filter); the bucket to
+> compare across versions is therefore *the scanner version*, not the
+> severity schema alone.
 >
 > [CAP-0066]: https://github.com/stellar/stellar-protocol/blob/master/core/cap-0066.md
 
