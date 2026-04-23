@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-04-23
+
 ### Added
 - **SS015** — `floating_point_math`: flags `f32` / `f64` / `f128` as a
   type position (parameter, return, local binding, generic arg) and
@@ -27,6 +29,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   first line (the existing `has_admin` idempotency guard keeps the
   function one-shot). Derived from a hand audit of soroswap-core and
   blend-contracts; see `docs/CASE-STUDY-SS016-INITIALIZER.md`.
+
+### Changed
+- `tests/rules.rs` SARIF shape assertion now expects 16 rules.
+
+### Summary
+SS015 + SS016 bring the rule count to **16** (SS001–SS016). All existing
+rules and the SARIF / GitHub Action integrations are unchanged.
 
 ## [0.3.0] — 2026-04-21
 
