@@ -54,8 +54,10 @@ been paid for in bounties.
 - License: MIT
 - 16 rules implemented (SS001–SS016), each with fixture + regression test.
 - SARIF 2.1.0 output + reusable GitHub Action at repo root.
-- x402-paywalled HTTP API (`api/`) wrapping the scanner — USDC-on-Base per
-  request, testnet deployment on Fly.io, mainnet flip is one env var.
+- x402-paywalled HTTP API (`api/`) wrapping the scanner — **live on Base
+  mainnet** at <https://soroban-scan-api-qhldjpbq.fly.dev/>. Real USDC on Base
+  per request ($0.01/scan, $0.05/repo-scan) via the permissionless OpenX402
+  facilitator; no accounts or API keys.
 - GitHub Actions CI green (build + test + clippy `-D warnings`).
 - Smoke test on the April-2026 Code4rena K2 repo (~37k LoC, 121 files):
   369 raw findings in 2.1 s wall-clock.
