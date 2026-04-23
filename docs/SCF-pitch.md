@@ -38,7 +38,7 @@ This hurts:
 `soroban-scan` is a single-binary Rust CLI that:
 
 1. Parses Soroban contracts via `syn`.
-2. Runs a suite of audit-oriented rules (12 in v0.1, growing).
+2. Runs a suite of audit-oriented rules (16 in v0.4.0, growing).
 3. Reports findings with file, line, snippet, severity, and remediation hint.
 4. Exits non-zero on configurable severity thresholds, so it drops cleanly
    into CI.
@@ -48,11 +48,14 @@ Each rule is grounded in a **real audit finding** from a public Soroban audit
 reports). Nothing is invented — the rules target patterns that have already
 been paid for in bounties.
 
-## v0.1 status (as of application)
+## v0.4.0 status (as of application)
 
 - Repo: <https://github.com/alexandrbeher89-del/soroban-scan>
 - License: MIT
-- 12 rules implemented (SS001–SS012), each with fixture + regression test.
+- 16 rules implemented (SS001–SS016), each with fixture + regression test.
+- SARIF 2.1.0 output + reusable GitHub Action at repo root.
+- x402-paywalled HTTP API (`api/`) wrapping the scanner — USDC-on-Base per
+  request, testnet deployment on Fly.io, mainnet flip is one env var.
 - GitHub Actions CI green (build + test + clippy `-D warnings`).
 - Smoke test on the April-2026 Code4rena K2 repo (~37k LoC, 121 files):
   369 raw findings in 2.1 s wall-clock.
@@ -63,7 +66,7 @@ Budget request: **$5,000 USDC** (Build Award tier 1), 6-8 week effort.
 
 Deliverables:
 
-1. **25 additional rules** (target: 37 total) covering the remaining
+1. **21 additional rules** (target: 37 total) covering the remaining
    high-frequency classes from public Soroban audits: cross-contract
    reentrancy patterns, archive/restore edge-cases, fee-math rounding,
    price-oracle staleness, admin-key lifecycle, storage-key prefix collisions,
@@ -81,8 +84,8 @@ Deliverables:
 
 ## Why me / why now
 
-- The tool already exists at v0.1, funded on a personal compute budget. The
-  grant accelerates from 12 → 37 rules and funds integration work, not
+- The tool already exists at v0.4.0, funded on a personal compute budget. The
+  grant accelerates from 16 → 37 rules and funds integration work, not
   speculative R&D.
 - I'm actively tracking public Soroban audits (K2 round 5 is live on
   Code4rena as of this writing), so each new audit cycle is feedstock for new

@@ -13,9 +13,10 @@ Companion doc: [SCF-pitch.md](./SCF-pitch.md) (high-level narrative).
 ## 1. Project summary (≤ 250 chars)
 
 > `soroban-scan` is a free, open-source static analyzer for Soroban smart contracts:
-> a Rust CLI + GitHub Action that flags 12 audit-proven bug classes (missing
-> `require_auth`, unchecked storage, TTL/CAP-0066, i128→u64 truncation, etc.) and
-> emits SARIF 2.1.0 straight into GitHub Security.
+> a Rust CLI + GitHub Action that flags 16 audit-proven bug classes (missing
+> `require_auth`, unchecked storage, TTL/CAP-0066, i128→u64 truncation, ledger
+> entropy, float math, unauthenticated initializers, etc.) and emits SARIF 2.1.0
+> straight into GitHub Security.
 
 ## 2. Problem statement
 
@@ -42,16 +43,20 @@ auditors start at line-item review instead of at pattern-matching.
 
 ## 3. Solution
 
-### What exists today (v0.2.1)
+### What exists today (v0.4.0)
 
 - Rust CLI, single binary: `soroban-scan <path> [--format human|json|sarif] [--skip …] [--fail-on high|medium|low|any]`.
-- 12 rules (SS001–SS012), each with a fixture that reproduces the originating
+- 16 rules (SS001–SS016), each with a fixture that reproduces the originating
   audit finding.
 - Output formats: human, JSON, SARIF 2.1.0.
 - Companion composite GitHub Action at repo root (`action.yml`) — 3-line drop-in
   for any Soroban repo's CI pipeline.
-- MIT licensed. CI green. 5 tagged releases. 4 reproducible case-study scans on
-  Blend / Soroswap / DeFindex / Phoenix.
+- Pay-per-call HTTP API (`api/`) wrapping the scanner with an x402 paywall —
+  clients pay USDC on Base per request, payments settle directly to the
+  project wallet. Currently deployed on a Base-Sepolia testnet facilitator
+  for shape validation; mainnet flip is a one-env-var change.
+- MIT licensed. CI green. 6 releases in CHANGELOG (v0.1.x → v0.4.0). 4
+  reproducible case-study scans on Blend / Soroswap / DeFindex / Phoenix.
 - CAP-0066 severity re-grading writeup (public self-correction after SDF's
   auto-restore change landed in Protocol 23).
 
@@ -62,7 +67,7 @@ CAP-0066 regrading: [docs/BLOG-CAP0066-REGRADE.md](./BLOG-CAP0066-REGRADE.md)
 ### What the grant delivers
 
 A production-ready, community-endorsed static-analysis layer for Soroban with
-**37 rules** (12 existing + 25 new), inline GitHub Code Scanning integration,
+**37 rules** (16 existing + 21 new), inline GitHub Code Scanning integration,
 a documentation site, and three upstreamed protocol case studies.
 
 ## 4. Budget
@@ -74,8 +79,8 @@ Milestone-based tranches:
 | # | Milestone | % | USD | Acceptance criteria |
 |---|-----------|---|-----|---------------------|
 | 0 | Kickoff (grant acceptance) | 10% | 1,000 | — |
-| 1 | +10 rules (SS013–SS022) with fixtures + tests | 20% | 2,000 | PR merged to `master`; CI green; each rule links to originating audit report in its doc block |
-| 2 | +10 rules (SS023–SS032) + rule catalogue site | 25% | 2,500 | `https://alexandrbeher89-del.github.io/soroban-scan/` live; catalogue auto-generated from rule metadata |
+| 1 | +7 rules (SS017–SS023) with fixtures + tests | 20% | 2,000 | PR merged to `master`; CI green; each rule links to originating audit report in its doc block |
+| 2 | +9 rules (SS024–SS032) + rule catalogue site | 25% | 2,500 | `https://alexandrbeher89-del.github.io/soroban-scan/` live; catalogue auto-generated from rule metadata |
 | 3 | +5 rules (SS033–SS037) + SARIF schema pinning + GitHub Action v1.0 release | 20% | 2,000 | Tagged `v1.0.0` release; Action consumable from Marketplace; third-party Soroban repo PR opened (even if not merged) |
 | 4 | 3 upstream case-study reports with SCF-funded protocol maintainers (consent-gated) | 15% | 1,500 | 3 reports published under `docs/CASE-STUDIES/`; at least one remediation PR opened upstream |
 | 5 | Final writeup + grant report to SCF | 10% | 1,000 | Public blog post summarizing findings, rule coverage map, adoption metrics |
@@ -129,19 +134,22 @@ Email: alexandrbeher89@gmail.com.
 
 ## 7. Traction
 
-Honest status as of 2026-04-21:
+Honest status as of 2026-04-23:
 
-- 5 tagged releases (v0.1.0 → v0.2.1).
-- 12 rules in production, each with test fixture + documented audit origin.
+- 6 releases in CHANGELOG (v0.1.0 → v0.4.0).
+- 16 rules in production, each with test fixture + documented audit origin.
 - 4 reproducible case-study scans on public Soroban protocols (Blend 49,
   Soroswap 39, DeFindex 99, Phoenix 129 findings).
 - CAP-0066 severity regrading published (SS001 High→Low, SS006 Low→Info) —
   demonstrates calibration discipline, not ambiguous "High everywhere"
   slop.
 - SARIF 2.1.0 output + reusable GitHub Action.
+- x402-paywalled HTTP API: any caller can pay USDC on Base (testnet today,
+  mainnet behind one env var) and get a scan back over plain HTTP. Running
+  on Fly.io.
 - MIT license, green CI on every commit.
 - Zero external stars, zero external PRs, zero production users **as of this writing**.
-  The repo is 3 days old. Distribution phase starts post-grant.
+  The repo is days old. Distribution phase starts post-grant.
 
 ## 8. Stellar integration
 
