@@ -145,9 +145,11 @@ Honest status as of 2026-04-23:
   demonstrates calibration discipline, not ambiguous "High everywhere"
   slop.
 - SARIF 2.1.0 output + reusable GitHub Action.
-- x402-paywalled HTTP API: any caller can pay USDC on Base (testnet today,
-  mainnet behind one env var) and get a scan back over plain HTTP. Running
-  on Fly.io.
+- x402-paywalled HTTP API **live on Base mainnet** at
+  <https://soroban-scan-api-qhldjpbq.fly.dev/> — any caller can pay real
+  USDC on Base per request ($0.01/scan, $0.05/repo-scan) and get a scan back
+  over plain HTTP, no accounts or API keys. Running on Fly.io via the
+  permissionless OpenX402 facilitator.
 - MIT license, green CI on every commit.
 - Zero external stars, zero external PRs, zero production users **as of this writing**.
   The repo is days old. Distribution phase starts post-grant.
